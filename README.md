@@ -1,7 +1,6 @@
 # mediastreamblender
 
-MediaStreamBlender - Mix &amp; Combine for 1-n MediaStream (audio/video) with recording capabilities
-
+MediaStreamBlender - mix,combine 1-n MediaStream's (audio/video) with recording capabilities. Renders to HTML canvas element and/or 1 single video/audio stream.
 
 ## about
 
