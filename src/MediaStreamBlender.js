@@ -1,15 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const MediaStreamRecorder_1 = require("./MediaStreamRecorder");
-class StreamSource {
-    constructor(stream, source, isLocal) {
-        this.stream = stream;
-        this.source = source;
-        this.isLocal = isLocal;
-        console.log("?isLocal", isLocal);
-    }
-}
-exports.StreamSource = StreamSource;
+const StreamSource_1 = require("./StreamSource");
 class MediaStreamBlender {
     /**
      * Create a video element , add the track(s)
@@ -28,6 +20,12 @@ class MediaStreamBlender {
         video.play();
         return video;
     }
+    /**
+     * Get a video stream from the canvas
+     *
+     * @returns
+     * @memberof MediaStreamBlender
+     */
     captureStream() {
         let stream = this.surface["captureStream"]() || this.surface["mozCaptureStream"]();
         let videoStream = new MediaStream();
@@ -38,12 +36,21 @@ class MediaStreamBlender {
         });
         return videoStream;
     }
+    /**
+     *  Add MediaStreamTrack
+     *
+     * @param {string} id
+     * @param {Array<MediaStreamTrack>} tracks
+     * @param {boolean} isLocal
+     * @returns {MediaStream}
+     * @memberof MediaStreamBlender
+     */
     addTracks(id, tracks, isLocal) {
         const stream = new MediaStream();
         tracks.forEach((track) => {
             if (track.kind === "video") {
                 stream.addTrack(track);
-                let source = new StreamSource(stream, this.createVideoFromStream(stream), isLocal);
+                let source = new StreamSource_1.StreamSource(stream, this.createVideoFromStream(stream), isLocal);
                 this.videosSources.set(id, source);
             }
             else {
@@ -53,35 +60,48 @@ class MediaStreamBlender {
                 }
                 stream.addTrack(track);
                 let audioSource = this.audioContext.createMediaStreamSource(stream);
-                let source = new StreamSource(stream, audioSource, isLocal);
+                let source = new StreamSource_1.StreamSource(stream, audioSource, isLocal);
                 if (!isLocal)
                     audioSource.connect(this.audioDestination);
                 this.audioSources.set(id, source);
             }
+            track.onended = () => {
+                this.onTrackEnded(id, track);
+            };
         });
         this.onTrack();
         return stream;
     }
+    /**
+     *  Refresh the canvas containging vidoes ( call after a new video is added )
+     *
+     * @memberof MediaStreamBlender
+     */
     refreshCanvas() {
-        // const h = surface.height
-        const videosLength = this.videosSources.size;
-        var v = Array.from(this.videosSources.values());
-        this.surface.width = videosLength > 1 ? v[0].source.width * 2 : v[0].source.width;
-        var height = 1;
-        if (videosLength === 3 || videosLength === 4) {
+        const numOfVideos = this.videosSources.size;
+        let videoSource = Array.from(this.videosSources.values());
+        this.surface.width = numOfVideos > 1 ? videoSource[0].source.width * 2 : videoSource[0].source.width;
+        let height = 1;
+        if (numOfVideos === 3 || numOfVideos === 4) {
             height = 2;
         }
-        if (videosLength === 5 || videosLength === 6) {
+        if (numOfVideos === 5 || numOfVideos === 6) {
             height = 3;
         }
-        if (videosLength === 7 || videosLength === 8) {
+        if (numOfVideos === 7 || numOfVideos === 8) {
             height = 4;
         }
-        if (videosLength === 9 || videosLength === 10) {
+        if (numOfVideos === 9 || numOfVideos === 10) {
             height = 5;
         }
-        this.surface.height = v[0].source.height * height;
+        this.surface.height = videoSource[0].source.height * height;
     }
+    /**
+     * Get a MediaStream of all remote audio tracks ( not self )
+     *
+     * @returns
+     * @memberof MediaStreamBlender
+     */
     getRemoteAudioStream() {
         this.audioDestination = this.audioContext.createMediaStreamDestination();
         this.audioSources.forEach((_audioSource) => {
@@ -93,6 +113,12 @@ class MediaStreamBlender {
         });
         return this.audioDestination.stream;
     }
+    /**
+     * Get a MediaStream containing all audio tracks
+     *
+     * @returns
+     * @memberof MediaStreamBlender
+     */
     getAllAudioStreams() {
         this.audioDestination = this.audioContext.createMediaStreamDestination();
         this.audioSources.forEach((_audioSource) => {
@@ -182,6 +208,9 @@ class MediaStreamBlender {
                 Array.from(this.videosSources.values()).forEach((v, i) => {
                     this.drawVideo(v.source, i);
                 });
+                // draw water mark, overlay ?
+                if (this.onFrameRendered)
+                    this.onFrameRendered(this.ctx);
             }, 1000 / fps);
         }
         else {

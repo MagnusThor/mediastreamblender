@@ -1,10 +1,5 @@
 import { MediaStreamRecorder } from './MediaStreamRecorder';
-export declare class StreamSource {
-    stream: MediaStream;
-    source: any;
-    isLocal: boolean;
-    constructor(stream: MediaStream, source: any, isLocal: boolean);
-}
+import { StreamSource } from './StreamSource';
 export declare class MediaStreamBlender {
     surface: HTMLCanvasElement;
     ctx: CanvasRenderingContext2D;
@@ -12,9 +7,31 @@ export declare class MediaStreamBlender {
     audioDestination: MediaStreamAudioDestinationNode;
     audioSources: Map<string, StreamSource>;
     videosSources: Map<string, StreamSource>;
+    /**
+     * Fires when a new track is added
+     *
+     * @memberof MediaStreamBlender
+     */
     onTrack: () => void;
+    /**
+     * Fires when a track has ended, is lost
+     *
+     * @memberof MediaStreamBlender
+     */
+    onTrackEnded: (id: string, track: MediaStreamTrack) => void;
+    /**
+     * Fires when recorder i started
+     *
+     * @memberof MediaStreamBlender
+     */
     onRecordingStart: () => void;
+    /**
+     * Fires when recorder is stopped
+     *
+     * @memberof MediaStreamBlender
+     */
     onRecordingEnded: (blobUrl: string) => void;
+    onFrameRendered: (ctx: RenderingContext) => void;
     recorder: MediaStreamRecorder;
     isRendering: boolean;
     isRecording: boolean;
@@ -27,10 +44,42 @@ export declare class MediaStreamBlender {
      * @memberof MediaStreamRenderer
      */
     createVideoFromStream(stream: MediaStream): HTMLVideoElement;
+    /**
+     * Get a video stream from the canvas
+     *
+     * @returns
+     * @memberof MediaStreamBlender
+     */
     captureStream(): MediaStream;
+    /**
+     *  Add MediaStreamTrack
+     *
+     * @param {string} id
+     * @param {Array<MediaStreamTrack>} tracks
+     * @param {boolean} isLocal
+     * @returns {MediaStream}
+     * @memberof MediaStreamBlender
+     */
     addTracks(id: string, tracks: Array<MediaStreamTrack>, isLocal: boolean): MediaStream;
+    /**
+     *  Refresh the canvas containging vidoes ( call after a new video is added )
+     *
+     * @memberof MediaStreamBlender
+     */
     refreshCanvas(): void;
+    /**
+     * Get a MediaStream of all remote audio tracks ( not self )
+     *
+     * @returns
+     * @memberof MediaStreamBlender
+     */
     getRemoteAudioStream(): MediaStream;
+    /**
+     * Get a MediaStream containing all audio tracks
+     *
+     * @returns
+     * @memberof MediaStreamBlender
+     */
     getAllAudioStreams(): MediaStream;
     /**
      * Draw video element on th canvas
@@ -39,7 +88,7 @@ export declare class MediaStreamBlender {
      * @param {number} index
      * @memberof MediaStreamRender
      */
-    drawVideo(video: HTMLVideoElement, index: number): void;
+    private drawVideo;
     /**
      * Creates an instance of MediaStreamBleder.
      * @param {HTMLCanvasElement} [el]

@@ -2,14 +2,28 @@ import { MediaLoader } from "../src/MediaLoader";
 import { MediaStreamBlender } from '../src/MediaStreamBlender';
 
 document.addEventListener("DOMContentLoaded",() => {
-   
+
+
+    // watermark image
+
+     let watermark = new Image();
+        watermark.src = "logo.png";
+     
+     
     let p = new MediaStreamBlender(document.querySelector("canvas"));
+
+    p.onFrameRendered = (ctx:CanvasRenderingContext2D) => {
+            // postprocess , add a watermark image,           
+            ctx.save();
+                ctx.filter = "invert()";
+                ctx.drawImage(watermark,10,10,100,100);
+            ctx.restore();
+    }
 
     p.onTrack =() =>{
         p.refreshCanvas();
         console.log("tracks added");
     }
-
     p.onRecordingStart = () =>{
         console.log("stared recording");
     }

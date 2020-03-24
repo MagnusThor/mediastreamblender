@@ -3,7 +3,17 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const MediaLoader_1 = require("../src/MediaLoader");
 const MediaStreamBlender_1 = require("../src/MediaStreamBlender");
 document.addEventListener("DOMContentLoaded", () => {
+    // watermark image
+    let watermark = new Image();
+    watermark.src = "logo.png";
     let p = new MediaStreamBlender_1.MediaStreamBlender(document.querySelector("canvas"));
+    p.onFrameRendered = (ctx) => {
+        // postprocess , add a watermark image,           
+        ctx.save();
+        ctx.filter = "invert()";
+        ctx.drawImage(watermark, 10, 10, 100, 100);
+        ctx.restore();
+    };
     p.onTrack = () => {
         p.refreshCanvas();
         console.log("tracks added");

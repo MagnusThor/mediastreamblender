@@ -6,3 +6,5 @@ var MediaStreamBlender_1 = require("./src/MediaStreamBlender");
 exports.MediaStreamBlender = MediaStreamBlender_1.MediaStreamBlender;
 var MediaLoader_1 = require("./src/MediaLoader");
 exports.MediaLoader = MediaLoader_1.MediaLoader;
+var StreamSource_1 = require("./src/StreamSource");
+exports.StreamSource = StreamSource_1.StreamSource;
