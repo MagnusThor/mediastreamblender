@@ -10,9 +10,13 @@ audio element.  It also provide recording capabillities.   MediaStreamBlender is
 
 ## install
 
-
     npm install mediastreamblender
     
  ## api
  
  TBD
+ 
+ 
+ ## demo
+ 
+ I'm using it at http://kollokvium.herokuapp.com/  
