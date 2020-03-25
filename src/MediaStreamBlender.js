@@ -105,9 +105,7 @@ class MediaStreamBlender {
     getRemoteAudioStream() {
         this.audioDestination = this.audioContext.createMediaStreamDestination();
         this.audioSources.forEach((_audioSource) => {
-            console.log(_audioSource.isLocal);
             if (!_audioSource.isLocal) {
-                console.log("connecting to audioDestination", _audioSource, this.audioDestination);
                 _audioSource.source.connect(this.audioDestination);
             }
         });
@@ -214,8 +212,8 @@ class MediaStreamBlender {
             }, 1000 / fps);
         }
         else {
-            this._handle = -1;
             clearInterval(this._handle);
+            this._handle = -1;
         }
         this.isRendering = !this.isRendering;
     }
