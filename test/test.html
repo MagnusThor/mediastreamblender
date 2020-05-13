@@ -1,0 +1,197 @@
+<html>
+
+
+<body>
+
+</body>
+<script>
+    const main = async(function* main(){
+  const logging = true;
+  let tasks = Promise.resolve(void 0);
+
+  const devices = yield navigator.mediaDevices.enumerateDevices();
+  console.table(devices);
+
+  const stream = yield navigator.mediaDevices.getUserMedia instanceof Function ? navigator.mediaDevices.getUserMedia({video: true, audio: true}) :
+                       navigator.getUserMedia instanceof Function ? new Promise((resolve, reject)=> navigator.getUserMedia({video: true, audio: true}, resolve, reject)) :
+                       navigator.webkitGetUserMedia instanceof Function ? new Promise((resolve, reject)=> navigator.webkitGetUserMedia({video: true, audio: true}, resolve, reject)) :
+                       Promise.reject(new Error("cannot use usermedia"));
+
+
+  if(logging){
+    stream.addEventListener("active", (ev)=>{ console.log(ev.type); });
+    stream.addEventListener("inactive", (ev)=>{ console.log(ev.type); });
+    stream.addEventListener("addtrack", (ev)=>{ console.log(ev.type); });
+    stream.addEventListener("removetrack", (ev)=>{ console.log(ev.type); });
+  }
+
+  const rec = new MediaRecorder(stream, {mimeType: 'video/webm; codecs="opus,vp8"'});
+  if(logging){
+    rec.addEventListener("dataavailable", (ev)=>{ console.log(ev.type); });
+    rec.addEventListener("pause", (ev)=>{ console.log(ev.type); });
+    rec.addEventListener("resume", (ev)=>{ console.log(ev.type); });
+    rec.addEventListener("start", (ev)=>{ console.log(ev.type); });
+    rec.addEventListener("stop", (ev)=>{ console.log(ev.type); });
+    rec.addEventListener("error", (ev)=>{ console.error(ev.type, ev); });
+  }
+
+  const ms = new MediaSource();
+  if(logging){
+    ms.addEventListener('sourceopen', (ev)=>{ console.log(ev.type); });
+    ms.addEventListener('sourceended', (ev)=>{ console.log(ev.type); });
+    ms.addEventListener('sourceclose', (ev)=>{ console.log(ev.type); });
+    ms.sourceBuffers.addEventListener('addsourcebuffer', (ev)=>{ console.log(ev.type); });
+    ms.sourceBuffers.addEventListener('removesourcebuffer', (ev)=>{ console.log(ev.type); });
+  }
+
+  const video = document.createElement("video");
+  if(logging){
+    video.addEventListener('loadstart', (ev)=>{ console.log(ev.type); });
+    video.addEventListener('progress', (ev)=>{ console.log(ev.type); });
+    video.addEventListener('loadedmetadata', (ev)=>{ console.log(ev.type); });
+    video.addEventListener('loadeddata', (ev)=>{ console.log(ev.type); });
+    video.addEventListener('canplay', (ev)=>{ console.log(ev.type); });
+    video.addEventListener('canplaythrough', (ev)=>{ console.log(ev.type); });
+    video.addEventListener('playing', (ev)=>{ console.log(ev.type); });
+    video.addEventListener('waiting', (ev)=>{ console.log(ev.type); });
+    video.addEventListener('seeking', (ev)=>{ console.log(ev.type); });
+    video.addEventListener('seeked', (ev)=>{ console.log(ev.type); });
+    video.addEventListener('ended', (ev)=>{ console.log(ev.type); });
+    video.addEventListener('emptied', (ev)=>{ console.log(ev.type); });
+    video.addEventListener('stalled', (ev)=>{ console.log(ev.type); });
+    video.addEventListener('timeupdate', (ev)=>{ console.log(ev.type); }); // annoying
+    video.addEventListener('durationchange', (ev)=>{ console.log(ev.type); });
+    video.addEventListener('ratechange', (ev)=>{ console.log(ev.type); });
+    video.addEventListener('play', (ev)=>{ console.log(ev.type); });
+    video.addEventListener('pause', (ev)=>{ console.log(ev.type); });
+    video.addEventListener('error', (ev)=>{ console.warn(ev.type, ev); });
+  }
+  video.volume = 0;
+  video.controls = true;
+  video.autoplay = true;
+  document.body.appendChild(video);
+
+  yield new Promise((resolve, reject)=>{
+    ms.addEventListener('sourceopen', ()=> resolve(), {once: true});
+    //video.srcObject = ms;
+    video.src = URL.createObjectURL(ms);
+  });
+
+  const sb = ms.addSourceBuffer(rec.mimeType);
+  if(logging){
+    sb.addEventListener('updatestart', (ev)=>{ console.log(ev.type); }); // annoying
+    sb.addEventListener('update', (ev)=>{ console.log(ev.type); }); // annoying
+    sb.addEventListener('updateend', (ev)=>{ console.log(ev.type); }); // annoying
+    sb.addEventListener('error', (ev)=>{ console.error(ev.type, ev); });
+    sb.addEventListener('abort', (ev)=>{ console.log(ev.type); });
+  }
+
+  const stop = async(function* stop(){
+    console.info("stopping");
+    if(sb.updating){ sb.abort(); }
+    if(ms.readyState === "open"){ ms.endOfStream(); }
+    rec.stop();
+    stream.getTracks().map((track)=>{ track.stop(); });
+    yield video.pause();
+    console.info("end");
+  });
+
+  const button = document.createElement("button");
+  button.innerHTML = "stop";
+  button.addEventListener("click", ()=>{
+    document.body.removeChild(button);
+    tasks = tasks.then(stop);
+  }, {once: true});
+  document.body.appendChild(button);
+
+  let i = 0;
+  rec.ondataavailable = ({data})=>{
+    tasks = tasks.then(async(function*(){
+      console.group(""+i);
+
+      try{
+        if(logging){ console.log("dataavailable", "size:", data.size); }
+
+        if(data.size === 0){
+          console.warn("empty recorder data");
+          throw new Error("empty recorder data");
+        }
+
+        const buf = yield readAsArrayBuffer(data);
+
+        yield new Promise((resolve, reject)=>{
+          sb.addEventListener('updateend', ()=> resolve(), {once: true});
+          sb.addEventListener("error", (ev)=> reject(ev), {once: true});
+          sb.appendBuffer(buf);
+        });
+
+        if(logging){
+          console.log("timestampOffset", sb.timestampOffset);
+          console.log("appendWindowStart", sb.appendWindowStart);
+          console.log("appendWindowEnd", sb.appendWindowEnd);
+          for(let i=0; i<sb.buffered.length; i++){
+            console.log("buffered", i, sb.buffered.start(i), sb.buffered.end(i));
+          }
+          for(let i=0; i<video.seekable.length; i++){
+            console.log("seekable", i, video.seekable.start(i), video.seekable.end(i));
+          }
+          console.log("webkitAudioDecodedByteCount", video.webkitAudioDecodedByteCount);
+          console.log("webkitVideoDecodedByteCount", video.webkitVideoDecodedByteCount);
+          console.log("webkitDecodedFrameCount", video.webkitDecodedFrameCount);
+          console.log("webkitDroppedFrameCount", video.webkitDroppedFrameCount);
+        }
+
+        if (video.buffered.length > 1) {
+          console.warn("MSE buffered has a gap!");
+          throw new Error("MSE buffered has a gap!");
+        }
+      }catch(err){
+        console.error(err);
+        yield stop();
+        console.groupEnd(""+i); i++;
+        return Promise.reject(err);
+      }
+
+      console.groupEnd(""+i);
+      i++;
+    }));
+  };
+
+  rec.start(1000);
+  console.info("start");
+});
+
+
+
+function sleep(ms){
+  return new Promise(resolve =>
+    setTimeout((()=>resolve(ms)), ms));
+}
+
+
+function readAsArrayBuffer(blob) {
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.addEventListener("loadend", ()=> resolve(reader.result), {once: true});
+    reader.addEventListener("error", (ev)=> reject(reader.error), {once: true});
+    reader.readAsArrayBuffer(blob);
+  });
+}
+
+
+function async(generatorFunc){
+  return function (arg) {
+    const generator = generatorFunc(arg);
+    return next(null);
+    function next(arg) {
+      const result = generator.next(arg);
+      if(result.done){ return result.value; }
+      else if(result.value instanceof Promise){ return result.value.then(next); }
+      else{ return Promise.resolve(result.value); }
+    }
+  }
+}
+
+main();
+</script>
+</html>
