@@ -4,6 +4,17 @@ const MediaStreamRecorder_1 = require("./MediaStreamRecorder");
 const StreamSource_1 = require("./StreamSource");
 class MediaStreamBlender {
     /**
+     * Creates an instance of MediaStreamBleder.
+     * @param {HTMLCanvasElement} [el]
+     * @memberof MediaStreamBleder
+     */
+    constructor(el) {
+        this.videosSources = new Map();
+        this.audioSources = new Map();
+        this.surface = el ? el : document.createElement("canvas");
+        this.ctx = this.surface.getContext("2d");
+    }
+    /**
      * Create a video element , add the track(s)
      *
      * @param {MediaStream} stream
@@ -163,17 +174,6 @@ class MediaStreamBlender {
         this.ctx.drawImage(video, x, y, width, height);
     }
     /**
-     * Creates an instance of MediaStreamBleder.
-     * @param {HTMLCanvasElement} [el]
-     * @memberof MediaStreamBleder
-     */
-    constructor(el) {
-        this.videosSources = new Map();
-        this.audioSources = new Map();
-        this.surface = el ? el : document.createElement("canvas");
-        this.ctx = this.surface.getContext("2d");
-    }
-    /**
      * Start/stop recorder
      *
      * @memberof MediaStreamBleder
@@ -184,7 +184,8 @@ class MediaStreamBlender {
             let audio = this.getAllAudioStreams().getAudioTracks();
             let tracks = [video[0], audio[0]];
             this.recorder = new MediaStreamRecorder_1.MediaStreamRecorder(tracks);
-            this.recorder.start(10);
+            this.recorder.ondataavailable = this.onRecorderData;
+            this.recorder.start(500);
             this.onRecordingStart();
         }
         else {

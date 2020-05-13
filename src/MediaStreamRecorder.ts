@@ -1,5 +1,5 @@
 declare var MediaRecorder: any;
-export class MediaStreamRecorder{
+export class MediaStreamRecorder {
     data: Array<Blob>;
     recorder: any;
     mediaStream: MediaStream;
@@ -9,10 +9,10 @@ export class MediaStreamRecorder{
      * @returns {string}
      * @memberof MediaStreamRecorder
      */
-    getBlobUrl():string{
+    getBlobUrl(): string {
         let blob = new Blob(this.data, {
-            type: 'video/webm'
-          });
+            type: 'video/webm; codecs="vp8"'
+        });
         return URL.createObjectURL(blob);
     }
     /**
@@ -21,26 +21,31 @@ export class MediaStreamRecorder{
      * @returns {Blob}
      * @memberof MediaStreamRecorder
      */
-    getBlob():Blob{
+    getBlob(): Blob {
         let blob = new Blob(this.data, {
             type: 'video/webm'
-          });
-          return blob;
+        });
+        return blob;
     }
     /**
      *Creates an instance of MediaStreamRecorder.
      * @param {Array<MediaStreamTrack>} tracks
      * @memberof MediaStreamRecorder
      */
-    constructor(public tracks:Array<MediaStreamTrack>){
+    constructor(public tracks: Array<MediaStreamTrack>) {
         this.mediaStream = new MediaStream(tracks);
-        this.recorder = new MediaRecorder(this.mediaStream,{
-            mimeType:'video/webm;codecs=vp9'});
+        this.recorder = new MediaRecorder(this.mediaStream,
+            { mimeType: 'video/webm; codecs="opus,vp8"' });
 
-        this.recorder.ondataavailable = (e:any) =>{
-            if(e.data.size > 0)
-                this.data.push(e.data);
-        }        
+        this.recorder.ondataavailable = (e: any) => {
+            if (e.data.size > 0) {
+                if (this.ondataavailable) {
+                    this.ondataavailable(e.data);
+                } else {
+                    this.data.push(e.data);
+                }
+            }
+        }
     }
 
     /**
@@ -49,18 +54,18 @@ export class MediaStreamRecorder{
      * @returns {Promise<string>}
      * @memberof MediaStreamRecorder
      */
-    flush():Promise<string>{
-            return new Promise((resolve, reject) => {
-                    resolve(this.getBlobUrl());
-                    this.data = new Array<Blob>();
-            });
-        }
+    flush(): Promise<string> {
+        return new Promise((resolve, reject) => {
+            resolve(this.getBlobUrl());
+            this.data = new Array<Blob>();
+        });
+    }
     /**
      * Stop recording
      *
      * @memberof MediaStreamRecorder
      */
-    stop(){
+    stop() {
         this.recorder.stop();
     }
 
@@ -70,8 +75,9 @@ export class MediaStreamRecorder{
      * @param {number} n
      * @memberof MediaStreamRecorder
      */
-    start(n:number){
-            this.data = new Array<Blob>();
-            this.recorder.start(n)
+    start(n: number) {
+        this.data = new Array<Blob>();
+        this.recorder.start(n)
     }
+    ondataavailable: (data: any) => void;
 }

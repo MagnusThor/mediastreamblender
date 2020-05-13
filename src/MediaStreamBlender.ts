@@ -44,6 +44,7 @@ export class MediaStreamBlender {
     isRecording: boolean;
 
     private _handle: any;
+    onRecorderData: (data: any) => void;
 
     /**
      * Create a video element , add the track(s)
@@ -229,7 +230,8 @@ export class MediaStreamBlender {
             let audio = this.getAllAudioStreams().getAudioTracks();
             let tracks = [video[0], audio[0]];
             this.recorder = new MediaStreamRecorder(tracks);
-            this.recorder.start(10);
+            this.recorder.ondataavailable = this.onRecorderData;
+            this.recorder.start(500);
             this.onRecordingStart();
 
         } else {

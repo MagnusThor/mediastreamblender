@@ -9,12 +9,16 @@ class MediaStreamRecorder {
     constructor(tracks) {
         this.tracks = tracks;
         this.mediaStream = new MediaStream(tracks);
-        this.recorder = new MediaRecorder(this.mediaStream, {
-            mimeType: 'video/webm;codecs=vp9'
-        });
+        this.recorder = new MediaRecorder(this.mediaStream, { mimeType: 'video/webm; codecs="opus,vp8"' });
         this.recorder.ondataavailable = (e) => {
-            if (e.data.size > 0)
-                this.data.push(e.data);
+            if (e.data.size > 0) {
+                if (this.ondataavailable) {
+                    this.ondataavailable(e.data);
+                }
+                else {
+                    this.data.push(e.data);
+                }
+            }
         };
     }
     /**
@@ -25,7 +29,7 @@ class MediaStreamRecorder {
      */
     getBlobUrl() {
         let blob = new Blob(this.data, {
-            type: 'video/webm'
+            type: 'video/webm; codecs="vp8"'
         });
         return URL.createObjectURL(blob);
     }

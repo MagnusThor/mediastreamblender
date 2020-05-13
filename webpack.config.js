@@ -2,7 +2,8 @@ module.exports = {
     mode:"development", 
     watch: false,
     entry: {    
-      testapp: './test/test.js'
+      broadcast: './test/sender.js',
+      participant: './test/participant.js'
     },
     
     output: {

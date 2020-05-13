@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "dependencies": {},
-  "devDependencies": {},
+  "devDependencies": {
+    "thor-io.client-vnext": "^2.0.3-beta.5"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
