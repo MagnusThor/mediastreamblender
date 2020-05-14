@@ -1,13 +1,16 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class MediaSourceStreamer {
-    constructor(el) {
+    constructor(el, logger, pre) {
         this.el = el;
+        this.logger = logger;
         this.numOfBuffersAdded = 0;
         this.sourceBuffers = new Array();
         this.mediaSource = new MediaSource();
         this.mediaSource.onsourceopen = (ev) => {
             this.onSourceOpen(ev);
+            if (pre)
+                this.sourceBuffer.appendBuffer(pre);
         };
         this.mediaSource.onsourceclose = (ev) => {
             this.onSourceClose(ev);
@@ -17,7 +20,7 @@ class MediaSourceStreamer {
         };
         this.el.src = URL.createObjectURL(this.mediaSource);
     }
-    addChunk(chunk) {
+    addChunk(chunk, ts) {
         if (!this.sourceBuffer)
             return;
         this.sourceBuffers.push(chunk);
@@ -27,7 +30,7 @@ class MediaSourceStreamer {
             this.startPlayback();
     }
     startPlayback() {
-        this.el.play();
+        //    this.el.play();
     }
     getNextBuffer() {
         if (this.sourceBuffers.length && !this.sourceBuffer.updating) {
@@ -40,25 +43,26 @@ class MediaSourceStreamer {
     onSourceOpen(ev) {
         this.sourceBuffer = this.mediaSource.addSourceBuffer('video/webm; codecs="opus,vp8"');
         this.sourceBuffer.onerror = (err) => {
-            console.error("source buffer error", err);
         };
         this.sourceBuffer.onupdateend = (ev) => {
             this.getNextBuffer();
-            let sb = this.sourceBuffer;
-            let video = this.el;
-            console.log("timestampOffset", sb.timestampOffset);
-            console.log("appendWindowStart", sb.appendWindowStart);
-            console.log("appendWindowEnd", sb.appendWindowEnd);
-            for (let i = 0; i < sb.buffered.length; i++) {
-                console.log("buffered", i, sb.buffered.start(i), sb.buffered.end(i));
+            if (this.logger) {
+                let sb = this.sourceBuffer;
+                let video = this.el;
+                this.logger.log("timestampOffset", sb.timestampOffset);
+                this.logger.log("appendWindowStart", sb.appendWindowStart);
+                this.logger.log("appendWindowEnd", sb.appendWindowEnd);
+                for (let i = 0; i < sb.buffered.length; i++) {
+                    this.logger.log("buffered", i, sb.buffered.start(i), sb.buffered.end(i));
+                }
+                for (let i = 0; i < video.seekable.length; i++) {
+                    this.logger.log("seekable", i, video.seekable.start(i), video.seekable.end(i));
+                }
+                this.logger.log("webkitAudioDecodedByteCount", video["webkitAudioDecodedByteCount"]);
+                this.logger.log("webkitVideoDecodedByteCount", video["webkitVideoDecodedByteCount"]);
+                this.logger.log("webkitDecodedFrameCount", video["webkitDecodedFrameCount"]);
+                this.logger.log("webkitDroppedFrameCount", video["webkitDroppedFrameCount"]);
             }
-            for (let i = 0; i < video.seekable.length; i++) {
-                console.log("seekable", i, video.seekable.start(i), video.seekable.end(i));
-            }
-            console.log("webkitAudioDecodedByteCount", video["webkitAudioDecodedByteCount"]);
-            console.log("webkitVideoDecodedByteCount", video["webkitVideoDecodedByteCount"]);
-            console.log("webkitDecodedFrameCount", video["webkitDecodedFrameCount"]);
-            console.log("webkitDroppedFrameCount", video["webkitDroppedFrameCount"]);
         };
     }
     onSourceClose(ev) {
@@ -66,6 +70,5 @@ class MediaSourceStreamer {
     }
     onSourceEnded(ev) {
     }
-    ;
 }
 exports.MediaSourceStreamer = MediaSourceStreamer;

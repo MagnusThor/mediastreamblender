@@ -4,10 +4,15 @@ const thor_io_client_vnext_1 = require("thor-io.client-vnext");
 const MediaStreamer_1 = require("../src/MediaStreamer");
 class Participant {
     constructor() {
-        document.querySelector("button").addEventListener("click", () => {
+        fetch("into.webm").then((r) => {
+            return r.arrayBuffer();
+        }).then((arr) => {
             let video = document.createElement("video");
-            video.width = 480;
-            video.height = 360;
+            video.onerror = (err) => {
+                console.log("video error", err);
+            };
+            video.width = 1280;
+            video.height = 720;
             video.controls = true;
             video.crossOrigin = 'anonymous';
             let mediaStreamer = new MediaStreamer_1.MediaSourceStreamer(video);
@@ -46,12 +51,17 @@ class Participant {
                             }
                         ]
                     });
-                    let dataChannel = this.rtc.CreateDataChannel("streamChannel");
-                    dataChannel.onMessage = (event) => {
-                        mediaStreamer.addChunk(event.data);
-                    };
-                    dataChannel.OnOpen = (a, b, c) => {
-                        console.log("a dataChannel to ", b);
+                    let streamChannel = this.rtc.CreateDataChannel("streamChannel");
+                    streamChannel.On("handshake", (message, buffer) => {
+                        console.log("handshake", message, buffer);
+                        // mediaStreamer.addChunk(arr,0);
+                        streamChannel.On("segment", (message, buffer) => {
+                            console.log("segment", buffer.byteLength);
+                            mediaStreamer.addChunk(buffer, 0);
+                        });
+                    });
+                    streamChannel.OnOpen = (a, b, c) => {
+                        console.log("a stream dataChannel to ", b);
                     };
                     this.rtc.OnContextCreated = () => {
                     };

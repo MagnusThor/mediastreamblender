@@ -1,18 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const MediaStreamBlender_1 = require("../src/MediaStreamBlender");
 const thor_io_client_vnext_1 = require("thor-io.client-vnext");
 const MediaStreamer_1 = require("../src/MediaStreamer");
+const __1 = require("..");
 document.addEventListener("DOMContentLoaded", () => {
     let mediaStreamer;
-    const readAsArrayBuffer = (blob) => {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.addEventListener("loadend", () => resolve(reader.result), { once: true });
-            reader.addEventListener("error", (ev) => reject(reader.error), { once: true });
-            reader.readAsArrayBuffer(blob);
-        });
-    };
     let factory = new thor_io_client_vnext_1.Factory("wss://kollokvium.herokuapp.com", ["broker"]);
     factory.OnOpen = () => {
         let broker = factory.GetController("broker");
@@ -27,10 +19,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             ]
         });
-        let dataChannel = rtc.CreateDataChannel("streamChannel");
-        dataChannel.OnOpen = (a, b, c) => {
-            console.log("A DataChannel to ", b);
-        };
         rtc.OnContextCreated = (p) => {
             console.log("Connected to a random context");
         };
@@ -38,74 +26,54 @@ document.addEventListener("DOMContentLoaded", () => {
             console.log("Now connected to", p.context);
             rtc.ConnectContext();
         };
-        // watermark image
-        let watermark = new Image();
-        watermark.src = "logo.png";
-        let p = new MediaStreamBlender_1.MediaStreamBlender(document.querySelector("canvas"));
-        p.onFrameRendered = (ctx) => {
-            // postprocess , add a watermark image,           
-            ctx.save();
-            ctx.filter = "invert()";
-            ctx.drawImage(watermark, 10, 10, 100, 100);
-            ctx.restore();
+        let constraints = {
+            video: {
+                width: { min: 320, max: 1280, ideal: 640 },
+                height: { min: 240, max: 720, ideal: 360 },
+                frameRate: 30
+            }, audio: true
         };
-        p.onTrack = () => {
-            p.refreshCanvas();
-            console.log("tracks added");
-        };
-        p.onRecordingStart = () => {
-            console.log("stared recording");
-        };
-        p.onRecorderData = (data) => {
-            //  console.log(e);
-            readAsArrayBuffer(data).then((buffer) => {
-                mediaStreamer.addChunk(buffer);
-                Array.from(dataChannel.PeerChannels.values()).forEach((pc) => {
-                    if (pc.dataChannel.readyState == "open")
-                        pc.dataChannel.send(buffer);
-                });
+        navigator.mediaDevices.getUserMedia(constraints).then((mediaStream) => {
+            fetch("into.webm").then((r) => {
+                return r.arrayBuffer();
+            }).then((arr) => {
+                let tracks = mediaStream.getTracks();
+                rtc.ChangeContext("foo-bar");
+                let video = document.createElement("video");
+                video.width = 640;
+                video.height = 360;
+                video.controls = true;
+                video.muted = true;
+                mediaStreamer = new MediaStreamer_1.MediaSourceStreamer(video);
+                let recorder = new __1.MediaStreamRecorder(tracks);
+                let dataChannel = rtc.CreateDataChannel("streamChannel");
+                dataChannel.OnOpen = (a, b, c) => {
+                    let blob = recorder.getParts();
+                    blob.arrayBuffer().then((buf) => {
+                        console.log(buf);
+                        dataChannel.InvokeBinary("handshake", {
+                            video: video.currentTime
+                        }, buf, true);
+                    });
+                };
+                recorder.ondataavailable = (blob) => {
+                    blob.arrayBuffer().then((buffer) => {
+                        mediaStreamer.addChunk(buffer, video.currentTime);
+                        const meta = {
+                            time: video.currentTime,
+                            size: buffer.byteLength
+                        };
+                        dataChannel.InvokeBinary("segment", meta, buffer, true);
+                    });
+                };
+                recorder.start(600);
+                video.play();
+                document.querySelector("#stream-video").append(video);
+            }).catch(err => {
+                console.error(err);
             });
-        };
-        p.onRecordingEnded = (blobUrl) => {
-            const download = document.createElement("a");
-            download.setAttribute("href", blobUrl);
-            download.textContent = "test.webm";
-            download.setAttribute("download", "download.webm");
-            download.click();
-        };
-        let audioPlayback = document.createElement('audio');
-        audioPlayback.controls = true;
-        audioPlayback.autoplay = true;
-        document.querySelector("body").append(audioPlayback);
-        navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((mediaStream) => {
-            let tracks = mediaStream.getTracks();
-            // // add a mp3
-            // MediaLoader.getAudioMediaStream("Bill Gates Commencement Speech 1.mp3", (mediaStream: MediaStream) => {
-            //     p.addTracks(Math.random().toString(36).substring(6), mediaStream.getTracks(), false);
-            // });
-            // MediaLoader.getAudioMediaStream("Pavane-for-a-dead-princess-piano.mp3", (mediaStream: MediaStream) => {
-            //     p.addTracks(Math.random().toString(36).substring(6), mediaStream.getTracks(), false);
-            // });
-            // add the captured video ( x 2 )
-            p.addTracks(Math.random().toString(36).substring(6), tracks, false);
-            p.render(30);
-            //  get all remote audio tracks, and stream to a audio element
-            audioPlayback.srcObject = p.getRemoteAudioStream();
-            rtc.ChangeContext("foo-bar");
-            let video = document.createElement("video");
-            video.width = 480;
-            video.height = 360;
-            video.controls = true;
-            mediaStreamer = new MediaStreamer_1.MediaSourceStreamer(video);
-            document.querySelector("#broadcast").addEventListener("click", () => {
-                p.record();
-            }, { once: true });
-            document.querySelector("#stream-video").append(video);
-        }).catch(err => {
-            console.error(err);
         });
         // expose API to window
-        window["mediaBlender"] = p;
         broker.Connect();
     };
 });

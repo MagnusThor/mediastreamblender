@@ -1,5 +1,6 @@
 import { Factory, WebRTC } from 'thor-io.client-vnext';
 import { MediaSourceStreamer } from '../src/MediaStreamer';
+import { MediaStreamRecorder } from '../src/MediaStreamRecorder';
 
 export class Participant {
 
@@ -9,15 +10,22 @@ export class Participant {
     constructor() {
 
 
-        document.querySelector("button").addEventListener("click", () => {
 
-
-
+        fetch("into.webm").then((r: Response) => {
+            return r.arrayBuffer()
+        }).then((arr: ArrayBuffer) => {
             let video = document.createElement("video");
-            video.width = 480; video.height = 360;
+            video.onerror = (err) => {
+                console.log("video error", err)
+            }
+            video.width = 1280; video.height = 720;
             video.controls = true;
             video.crossOrigin = 'anonymous';
             let mediaStreamer = new MediaSourceStreamer(video);
+
+
+
+
             video.addEventListener('loadstart', (ev) => { console.log(ev.type); });
             video.addEventListener('progress', (ev) => { console.log(ev.type); });
             video.addEventListener('loadedmetadata', (ev) => { console.log(ev.type); });
@@ -56,13 +64,33 @@ export class Participant {
                             }
                         ]
                     });
-                    let dataChannel = this.rtc.CreateDataChannel("streamChannel");
-                    dataChannel.onMessage = (event: MessageEvent) => {
-                        mediaStreamer.addChunk(event.data);
+                    let streamChannel = this.rtc.CreateDataChannel("streamChannel");
 
-                    };
-                    dataChannel.OnOpen = (a, b, c) => {
-                        console.log("a dataChannel to ", b);
+
+              
+                    streamChannel.On("handshake", (message: any, buffer: ArrayBuffer) => {
+
+                    
+                        console.log("handshake",message,buffer);
+                    
+                       // mediaStreamer.addChunk(arr,0);
+
+                        streamChannel.On("segment", (message: any, buffer: ArrayBuffer) => {
+                            console.log("segment",buffer.byteLength);
+                                mediaStreamer.addChunk(buffer,0);
+                        });
+    
+                    
+                    });
+
+
+
+
+
+
+
+                    streamChannel.OnOpen = (a, b, c) => {
+                        console.log("a stream dataChannel to ", b);
                     }
                     this.rtc.OnContextCreated = () => {
                     };
@@ -78,6 +106,7 @@ export class Participant {
             };
 
         });
+
     }
 
 }

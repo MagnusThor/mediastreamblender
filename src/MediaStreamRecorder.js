@@ -45,6 +45,12 @@ class MediaStreamRecorder {
         });
         return blob;
     }
+    getParts() {
+        let blob = new Blob([this.data[0]], {
+            type: 'video/webm'
+        });
+        return blob;
+    }
     /**
      * Flush data buffer and get recorded data (blob)
      *

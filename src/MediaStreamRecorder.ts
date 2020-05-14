@@ -27,6 +27,12 @@ export class MediaStreamRecorder {
         });
         return blob;
     }
+    getParts(): Blob {
+        let blob = new Blob([this.data[0]], {
+            type: 'video/webm'
+        });
+        return blob;
+    }
     /**
      *Creates an instance of MediaStreamRecorder.
      * @param {Array<MediaStreamTrack>} tracks
