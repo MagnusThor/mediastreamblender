@@ -49,10 +49,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 let dataChannel = rtc.CreateDataChannel("streamChannel");
                 dataChannel.OnOpen = (a, b, c) => {
                     let blob = recorder.getParts();
-                    blob.arrayBuffer().then((buf) => {
-                        dataChannel.InvokeBinary("handshake", {
-                            video: video.currentTime
-                        }, buf, true);
+                    dataChannel.Invoke("handshake", {
+                        video: video.currentTime
                     });
                 };
                 recorder.ondataavailable = (blob) => {

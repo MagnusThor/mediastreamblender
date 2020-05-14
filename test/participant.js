@@ -52,13 +52,13 @@ class Participant {
                         ]
                     });
                     let streamChannel = this.rtc.CreateDataChannel("streamChannel");
+                    streamChannel.On("segment", (message, buffer) => {
+                        console.log("segment", buffer.byteLength);
+                        mediaStreamer.addChunk(buffer, 0);
+                    });
                     streamChannel.On("handshake", (message, buffer) => {
-                        console.log("handshake", message, buffer);
+                        console.log("handshake", message);
                         // mediaStreamer.addChunk(arr,0);
-                        streamChannel.On("segment", (message, buffer) => {
-                            console.log("segment", buffer.byteLength);
-                            mediaStreamer.addChunk(buffer, 0);
-                        });
                     });
                     streamChannel.OnOpen = (a, b, c) => {
                         console.log("a stream dataChannel to ", b);
