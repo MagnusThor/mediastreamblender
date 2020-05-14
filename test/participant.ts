@@ -68,27 +68,20 @@ export class Participant {
 
 
               
+                    streamChannel.On("segment", (message: any, buffer: ArrayBuffer) => {
+                        console.log("segment",buffer.byteLength);
+                            mediaStreamer.addChunk(buffer,0);
+                    });  
+
                     streamChannel.On("handshake", (message: any, buffer: ArrayBuffer) => {
 
                     
-                        console.log("handshake",message,buffer);
+                        console.log("handshake",message);
                     
                        // mediaStreamer.addChunk(arr,0);
 
-                        streamChannel.On("segment", (message: any, buffer: ArrayBuffer) => {
-                            console.log("segment",buffer.byteLength);
-                                mediaStreamer.addChunk(buffer,0);
-                        });
-    
-                    
+                                       
                     });
-
-
-
-
-
-
-
                     streamChannel.OnOpen = (a, b, c) => {
                         console.log("a stream dataChannel to ", b);
                     }

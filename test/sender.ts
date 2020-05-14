@@ -73,14 +73,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 dataChannel.OnOpen = (a, b, c) => {          
                     let blob = recorder.getParts();
                     
-                    blob.arrayBuffer().then ( (buf:ArrayBuffer) => {
-
-                    console.log(buf);
-
-                        dataChannel.InvokeBinary("handshake",{
+                
+                        dataChannel.Invoke("handshake",{
                             video: video.currentTime
-                        },buf,true);
-                    });
+                        });
+                   
 
                 }
 
