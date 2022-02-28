@@ -15,7 +15,6 @@ export class BlendExample { // no need to be frank, but i did start this way :-)
         let ms = this.blender.captureStream(); // this can be used in  WebRTC - RTCPeerConnection 
         videoEl.srcObject = ms;
     }
-
 }
 
 document.addEventListener("DOMContentLoaded", () => {
