@@ -1,5 +1,5 @@
 import { MediaStreamBlender, IStreamSource } from "../..";
-import { ILayer } from "../../src/ILayer";
+import { ILayer } from "../..";
 
 export class BlendExample { // no need to be frank, but i did start this way :-)
     blender: MediaStreamBlender
