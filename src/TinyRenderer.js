@@ -1,28 +1,21 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.TR = void 0;
-class TR {
+exports.Tiny2DRenderer = void 0;
+class Tiny2DRenderer {
     constructor(ctx, w, h) {
         this.ctx = ctx;
         this.layers = new Map();
-        //  const canvas = document.createElement("canvas");
-        //  canvas.width = w; canvas.height = h;
-        this.properties = [w, h, w / 2, h / 2];
-        //   this.ctx = canvas.getContext("2d");
-        //    this.canvas = canvas;
     }
-    data() {
+    toBase64() {
         return this.canvas.toDataURL("image/png", 1.0);
     }
-    D(key) {
+    draw(key) {
         this.layers.delete(key);
     }
-    A(key, fn) {
-        const layer = { key: key, ctx: this.ctx, fn: fn };
-        this.layers.set(key, layer);
+    addLayer(layer) {
+        this.layers.set(layer.id, layer);
     }
-    R(t, pre) {
-        //   this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    renderLayers(t, pre) {
         if (!pre) {
             this.layers.forEach((v) => {
                 v.fn(t, this.canvas, this.ctx);
@@ -34,4 +27,4 @@ class TR {
         return this;
     }
 }
-exports.TR = TR;
+exports.Tiny2DRenderer = Tiny2DRenderer;
