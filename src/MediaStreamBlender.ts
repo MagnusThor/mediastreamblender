@@ -1,6 +1,8 @@
 
+import { ILayer } from './ILayer';
 import { MediaStreamRecorder } from './MediaStreamRecorder';
-import { StreamSource } from './StreamSource';
+import { IStreamSource } from './IStreamSource';
+import { TR } from './TinyRenderer';
 
 
 export class MediaStreamBlender {
@@ -8,8 +10,9 @@ export class MediaStreamBlender {
     ctx: CanvasRenderingContext2D;
     audioContext: AudioContext;
     audioDestination: MediaStreamAudioDestinationNode;
-    audioSources: Map<string, StreamSource>;
-    videosSources: Map<string, StreamSource>;
+    audioSources = new Map<string, IStreamSource>();tinyRender: TR;
+;
+    videosSources = new Map<string, IStreamSource>();
     /**
      * Fires when a new track is added
      *
@@ -34,17 +37,21 @@ export class MediaStreamBlender {
      * @memberof MediaStreamBlender
      */
     onRecordingEnded: (blobUrl: string) => void
-
-
-    onFrameRendered: (ctx:RenderingContext) => void
+    /**
+     * Fires when a frame is rendered
+     *
+     * @memberof MediaStreamBlender
+     */
+    onFrameRendered: (ctx: RenderingContext) => void
 
 
     recorder: MediaStreamRecorder;
+    onRecorderData: (data: any) => void;
+
+
     isRendering: boolean;
     isRecording: boolean;
-
     private _handle: any;
-    onRecorderData: (data: any) => void;
 
     /**
      * Create a video element , add the track(s)
@@ -66,10 +73,10 @@ export class MediaStreamBlender {
     /**
      * Get a video stream from the canvas
      *
-     * @returns
+     * @returns MediaStream
      * @memberof MediaStreamBlender
      */
-    captureStream() {
+    captureStream(): MediaStream {
         let stream = this.surface["captureStream"]() || this.surface["mozCaptureStream"]();
         let videoStream = new MediaStream();
         stream.getTracks().filter(function (t) {
@@ -80,8 +87,20 @@ export class MediaStreamBlender {
 
         return videoStream;
     }
+
     /**
-     *  Add MediaStreamTrack 
+     * Add a video element from a HTMLVideoElement
+     *
+     * @param {string} id
+     * @param {HTMLVideoElement} vs
+     * @memberof MediaStreamBlender
+     */
+    addVideoSource(id: string, vs: HTMLVideoElement): void {
+        const sc: IStreamSource = { source: vs, isLocal: true }
+        this.videosSources.set(id, sc);
+    }
+    /**
+     *  Add MediaStreamTracks 
      *
      * @param {string} id
      * @param {Array<MediaStreamTrack>} tracks
@@ -94,8 +113,10 @@ export class MediaStreamBlender {
         tracks.forEach((track: MediaStreamTrack) => {
             if (track.kind === "video") {
                 stream.addTrack(track);
-                let source = new StreamSource(stream, this.createVideoFromStream(stream), isLocal)
+
+                let source: IStreamSource = { stream, source: this.createVideoFromStream(stream), isLocal };
                 this.videosSources.set(id, source);
+
             } else {
                 if (!this.audioContext) {
                     this.audioContext = new AudioContext();
@@ -103,21 +124,23 @@ export class MediaStreamBlender {
                 }
                 stream.addTrack(track);
                 let audioSource = this.audioContext.createMediaStreamSource(stream);
-                let source = new StreamSource(stream, audioSource, isLocal)
+                let source: IStreamSource = { stream, source: audioSource, isLocal };
                 if (!isLocal)
                     audioSource.connect(this.audioDestination);
                 this.audioSources.set(id, source);
             }
             track.onended = () => {
-                this.onTrackEnded(id, track);
+                if (this.onTrackEnded)
+                    this.onTrackEnded(id, track);
             }
         });
-        this.onTrack();
+        if (this.onTrack)
+            this.onTrack();
         return stream;
     }
 
     /**
-     *  Refresh the canvas containging vidoes ( call after a new video is added )
+     *  Refresh the canvas containg videos ( call after a new video is added )
      *
      * @memberof MediaStreamBlender
      */
@@ -149,9 +172,9 @@ export class MediaStreamBlender {
      */
     getRemoteAudioStream() {
         this.audioDestination = this.audioContext.createMediaStreamDestination();
-        this.audioSources.forEach((_audioSource: StreamSource) => {
+        this.audioSources.forEach((_audioSource: IStreamSource) => {
             if (!_audioSource.isLocal) {
-                     _audioSource.source.connect(this.audioDestination);
+                _audioSource.source.connect(this.audioDestination);
             }
         });
 
@@ -165,7 +188,7 @@ export class MediaStreamBlender {
      */
     getAllAudioStreams() {
         this.audioDestination = this.audioContext.createMediaStreamDestination();
-        this.audioSources.forEach((_audioSource: StreamSource) => {
+        this.audioSources.forEach((_audioSource: IStreamSource) => {
             _audioSource.source.connect(this.audioDestination);
         });
         return this.audioDestination.stream;
@@ -206,6 +229,7 @@ export class MediaStreamBlender {
             x = video.width;
             y = video.height * 3;
         }
+       
         this.ctx.drawImage(video, x, y, width, height);
     }
     /**
@@ -214,10 +238,14 @@ export class MediaStreamBlender {
      * @memberof MediaStreamBleder
      */
     constructor(el?: HTMLCanvasElement) {
-        this.videosSources = new Map<string, StreamSource>();
-        this.audioSources = new Map<string, StreamSource>()
+        this.videosSources =
+            this.audioSources = new Map<string, IStreamSource>()
         this.surface = el ? el : document.createElement("canvas") as HTMLCanvasElement;
-        this.ctx = this.surface.getContext("2d");
+        this.ctx = this.surface.getContext("2d");       
+        
+        this.tinyRender = new TR(this.ctx,this.surface.width, this.surface.height);
+
+
     }
     /**
      * Start/stop recorder
@@ -253,20 +281,24 @@ export class MediaStreamBlender {
                 Array.from(this.videosSources.values()).forEach((v: any, i: number) => {
                     this.drawVideo(v.source, i);
                 });
+
+                this.tinyRender.R(this._handle);
+
                 // draw water mark, overlay ?
-
-                    if(this.onFrameRendered) 
-                        this.onFrameRendered(this.ctx);
-
+                if (this.onFrameRendered)
+                    this.onFrameRendered(this.ctx);
             }, 1000 / fps);
-        } else {          
+        } else {
             clearInterval(this._handle);
             this._handle = -1;
         }
         this.isRendering = !this.isRendering;
     }
+
+    addOnScreenLayer(layer:ILayer) {   
+        this.tinyRender.A(layer.id,layer.fn);
+    }
+
 }
-
-
 
 

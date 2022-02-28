@@ -1,10 +1,13 @@
 export class MediaLoader {
-    private static readFile(url: string): Promise<Blob> {
+    static readFile(url: string): Promise<Blob> {
         return new Promise<Blob>((resolve, reject) => {
             fetch(url).then((response: Response) => {
                 resolve(response.blob());
             }).catch(reject);
         });
+    }
+    static getVideoMediaStream(url: string, callback: (m: MediaStream) => void) {
+        throw "not yet implemented";
     }
     static getAudioMediaStream(url: string, callback: (m: MediaStream) => void) {
         this.readFile(url).then((blob: Blob) => {
