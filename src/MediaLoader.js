@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.MediaLoader = void 0;
 class MediaLoader {
     static readFile(url) {
         return new Promise((resolve, reject) => {

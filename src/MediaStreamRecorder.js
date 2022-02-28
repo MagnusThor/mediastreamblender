@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.MediaStreamRecorder = void 0;
 class MediaStreamRecorder {
     /**
      *Creates an instance of MediaStreamRecorder.

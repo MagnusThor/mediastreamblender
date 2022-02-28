@@ -2,12 +2,12 @@ module.exports = {
     mode:"development", 
     watch: false,
     entry: {    
-      broadcast: './test/sender.js',
-      participant: './test/participant.js'
+      example: './example/src/blend.js',
+
     },
     
     output: {
-      path: __dirname + '/test/build',
+      path: __dirname + '/example/build',
       filename: '[name]-bundle.js'
     },
   }
