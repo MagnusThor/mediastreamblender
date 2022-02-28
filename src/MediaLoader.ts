@@ -7,7 +7,7 @@ export class MediaLoader {
         });
     }
     static getVideoMediaStream(url: string, callback: (m: MediaStream) => void) {
-        throw "not yet implemented";
+        throw "not yet implemented"; // load and get the MediaStream of the video? Possible? Prolly yes.
     }
     static getAudioMediaStream(url: string, callback: (m: MediaStream) => void) {
         this.readFile(url).then((blob: Blob) => {

@@ -1,35 +1,22 @@
-import { I2D } from "./I2D";
-
-
-
-export class TR {
+import { ILayer } from "./ILayer";
+export class Tiny2DRenderer {
     canvas: HTMLCanvasElement;
- //   ctx: CanvasRenderingContext2D;
-    layers: Map<string, I2D>;
-    time: number;
-    properties: Array<number>;
+    layers: Map<string, ILayer>;
     constructor(public ctx:CanvasRenderingContext2D,w: number, h: number) {
-        this.layers = new Map<string, I2D>();
-      //  const canvas = document.createElement("canvas");
-      //  canvas.width = w; canvas.height = h;
-        this.properties = [w, h, w / 2, h / 2];
-     //   this.ctx = canvas.getContext("2d");
-    //    this.canvas = canvas;
+        this.layers = new Map<string, ILayer>();
     }
-    data(): any {
+    toBase64(): string {
         return this.canvas.toDataURL("image/png", 1.0);
     }
-    D(key: string): void {
+    draw(key: string): void {
         this.layers.delete(key);
     }
-    A(key: string, fn: (timeStamp: number, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) => void): void {
-        const layer: I2D = { key: key, ctx: this.ctx, fn: fn };
-        this.layers.set(key, layer);
+    addLayer(layer:ILayer): void {
+       this.layers.set(layer.id, layer);
     }
-    R(t: number, pre?: string): TR {
-     //   this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    renderLayers(t: number, pre?: string): Tiny2DRenderer {
         if (!pre) {
-            this.layers.forEach((v) => {
+            this.layers.forEach((v:ILayer) => {
                 v.fn(t, this.canvas, this.ctx);
             });
         } else {

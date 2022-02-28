@@ -16,7 +16,7 @@ class MediaStreamBlender {
             this.audioSources = new Map();
         this.surface = el ? el : document.createElement("canvas");
         this.ctx = this.surface.getContext("2d");
-        this.tinyRender = new TinyRenderer_1.TR(this.ctx, this.surface.width, this.surface.height);
+        this.tinyRender = new TinyRenderer_1.Tiny2DRenderer(this.ctx, this.surface.width, this.surface.height);
     }
     ;
     /**
@@ -51,6 +51,14 @@ class MediaStreamBlender {
             videoStream.addTrack(track);
         });
         return videoStream;
+    }
+    /**
+     * Add a background image to to surface
+     *
+     * @memberof MediaStreamBlender
+     */
+    addBackgrouund() {
+        // do op 
     }
     /**
      * Add a video element from a HTMLVideoElement
@@ -221,11 +229,12 @@ class MediaStreamBlender {
     render(fps) {
         if (!this.isRendering) {
             this.refreshCanvas();
+            this.addBackgrouund();
             this._handle = setInterval(() => {
                 Array.from(this.videosSources.values()).forEach((v, i) => {
                     this.drawVideo(v.source, i);
                 });
-                this.tinyRender.R(this._handle);
+                this.tinyRender.renderLayers(this._handle);
                 // draw water mark, overlay ?
                 if (this.onFrameRendered)
                     this.onFrameRendered(this.ctx);
@@ -237,8 +246,14 @@ class MediaStreamBlender {
         }
         this.isRendering = !this.isRendering;
     }
+    /**
+     * Add an on screen display later to surface
+     *
+     * @param {ILayer} layer
+     * @memberof MediaStreamBlender
+     */
     addOnScreenLayer(layer) {
-        this.tinyRender.A(layer.id, layer.fn);
+        this.tinyRender.addLayer(layer);
     }
 }
 exports.MediaStreamBlender = MediaStreamBlender;

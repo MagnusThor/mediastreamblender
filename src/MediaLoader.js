@@ -9,6 +9,9 @@ class MediaLoader {
             }).catch(reject);
         });
     }
+    static getVideoMediaStream(url, callback) {
+        throw "not yet implemented"; // load and get the MediaStream of the video? Possible? Prolly yes.
+    }
     static getAudioMediaStream(url, callback) {
         this.readFile(url).then((blob) => {
             var context = new AudioContext();

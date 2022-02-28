@@ -20,7 +20,7 @@ export class BlendExample { // no need to be frank, but i did start this way :-)
 
 document.addEventListener("DOMContentLoaded", () => {
     let b = new BlendExample();
-    navigator.getUserMedia({ video: { width: 640, height: 360 }, audio: false }, (ms) => {
+    navigator["getUserMedia"]({ video: { width: 640, height: 360 }, audio: false }, (ms) => {
         b.addTracks(ms.getTracks()) // add the webcam 640x360
         // load a video 360p video
         let video = document.createElement("video") as HTMLVideoElement // 
@@ -30,6 +30,8 @@ document.addEventListener("DOMContentLoaded", () => {
         video.loop = true;
         video.oncanplay = () => {
             b.blender.addVideoSource(video.id || "foo", video);
+            b.blender.addVideoSource(video.id || "bar", video);
+         
             //  document.querySelector("div").appendChild(video)
             b.blender.refreshCanvas();
         }
@@ -45,7 +47,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 ctx.stroke();
                 ctx.font = "70px 'Arial'";
                 ctx.fillText("HELLO", 60, 200);
-            }
+            },
+            order:0 
         }
         b.blender.addOnScreenLayer(layerA);
 
