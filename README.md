@@ -1,21 +1,17 @@
 # mediastreamblender
 
-MediaStreamBlender - mix,combine 1-n MediaStream's (audio/video) with recording capabilities. Renders to HTML canvas element and/or 1 single video/audio stream.
-
-## about
-
-MediaStreamBlender helps you to pass 1-n streams (audio & video) and get MediaStream that you can attach to a video and/or 
-audio element.  It also provide recording capabillities.   MediaStreamBlender is suitable for usage in WebRTC applications.
-
+MediaStreamBlender - mix,combine 1-n MediaStream's (audio/video) + add 1-n on-screen-layer.  Also includeds recording capabilities. 
+Renders to HTMLCanvasElement  and/or 1-n video/audio stream.Compatible with WebRTC
 ## install
 
-    npm install mediastreamblender
+    N/A
     
  ## api
  
- TBD
+     See /example/blend.ts file for a simple implementation
  
  
  ## demo
  
- I'm using it at http://kollokvium.herokuapp.com/  
+https://magnusthor.github.io/mediastreamblender/example/
+
