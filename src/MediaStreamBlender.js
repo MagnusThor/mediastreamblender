@@ -16,7 +16,7 @@ class MediaStreamBlender {
             this.audioSources = new Map();
         this.surface = el ? el : document.createElement("canvas");
         this.ctx = this.surface.getContext("2d");
-        this.tinyRender = new TinyRenderer_1.Tiny2DRenderer(this.ctx, this.surface.width, this.surface.height);
+        this.tinyRender = new TinyRenderer_1.Tiny2DRenderer(this.ctx);
     }
     ;
     /**
@@ -254,6 +254,16 @@ class MediaStreamBlender {
      */
     addOnScreenLayer(layer) {
         this.tinyRender.addLayer(layer);
+    }
+    /**
+     * Add an array of layers to the surface
+     *
+     * @param {ILayer[]} layers
+     * @memberof MediaStreamBlender
+     */
+    addOnScreenLayers(layers) {
+        layers.forEach(layer => this.tinyRender.addLayer(layer));
+        ;
     }
 }
 exports.MediaStreamBlender = MediaStreamBlender;

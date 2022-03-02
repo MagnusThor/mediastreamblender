@@ -23,22 +23,30 @@ document.addEventListener("DOMContentLoaded", () => {
     navigator["getUserMedia"]({ video: { width: 640, height: 360 }, audio: false }, (ms) => {
         b.addTracks(ms.getTracks()); // add the webcam 640x360
         // load a video 360p video
-        let video = document.createElement("video"); // 
-        video.width = 640;
-        video.height = 360;
-        video.autoplay = true;
-        video.loop = true;
-        video.oncanplay = () => {
-            b.blender.addVideoSource(video.id || "foo", video);
-            b.blender.addVideoSource(video.id || "bar", video);
-            //  document.querySelector("div").appendChild(video)
+        let video1 = document.createElement("video"); // 
+        video1.width = 640;
+        video1.height = 360;
+        video1.autoplay = true;
+        video1.loop = true;
+        video1.oncanplay = () => {
+            b.blender.addVideoSource("video1", video1);
             b.blender.refreshCanvas();
         };
-        video.src = "assets/into.webm";
+        video1.src = "assets/video1.webm";
+        let video2 = document.createElement("video"); // 
+        video2.width = 640;
+        video2.height = 360;
+        video2.autoplay = true;
+        video2.loop = true;
+        video2.oncanplay = () => {
+            b.blender.addVideoSource("video2", video2);
+            b.blender.refreshCanvas();
+        };
+        video2.src = "assets/video2.mp4";
         const layerA = {
-            id: "myLayer",
+            id: "Hello Box",
             fn: (time, canvas, ctx) => {
-                const c = "#ffffff";
+                const c = "#ff0000";
                 ctx.fillStyle = c;
                 ctx.strokeStyle = c;
                 ctx.lineWidth = 10;
@@ -47,9 +55,22 @@ document.addEventListener("DOMContentLoaded", () => {
                 ctx.font = "70px 'Arial'";
                 ctx.fillText("HELLO", 60, 200);
             },
-            order: 0
+            visible: true
+        };
+        const layerB = {
+            id: "bottom ribbon with text",
+            fn: (time, canvas, ctx) => {
+                ctx.fillStyle = "#ff0000a0";
+                // ctx.lineWidth = 10;
+                ctx.fillRect(0, canvas.height - 60, canvas.width / 2, 50);
+                ctx.fillStyle = "#ffffff";
+                ctx.font = "30px 'Arial'";
+                ctx.fillText("Change the world by being yourself", 20, canvas.height - 25);
+            },
+            visible: true
         };
         b.blender.addOnScreenLayer(layerA);
+        b.blender.addOnScreenLayer(layerB);
         b.setMediaStream(document.querySelector("video"));
         b.blender.render(25);
     }, err => console.error(err));
