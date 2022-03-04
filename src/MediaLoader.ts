@@ -31,4 +31,30 @@ export class MediaLoader {
             };
         });
     }
+    /**
+     * 
+     *
+     * @param {string[]} videoSorces
+     * @return {*}  {Promise<HTMLVideoElement>}
+     * @memberof MediaLoader
+     */
+    static loadVideos(videoSorces: string, w?: number , h?: number): Promise<HTMLVideoElement> {
+
+        return new Promise<HTMLVideoElement>((resolve, reject) => {
+            let video = document.createElement("video") as HTMLVideoElement;
+            video.width = w | 640;
+            video.height = h | 360;
+            video.autoplay = true;
+            video.loop = true;
+            video.oncanplay = () => {
+                resolve(video);
+            }
+            video.onerror = (err) => {
+                reject(err)
+            }
+            video.src = videoSorces;
+
+        });
+
+    }
 }

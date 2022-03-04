@@ -1,4 +1,5 @@
-import { ILayer } from "./ILayer";
+import { ILayer } from "./interfaces/ILayer";
+
 /**
  *
  *

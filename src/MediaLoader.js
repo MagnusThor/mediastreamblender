@@ -34,5 +34,28 @@ class MediaLoader {
             };
         });
     }
+    /**
+     *
+     *
+     * @param {string[]} videoSorces
+     * @return {*}  {Promise<HTMLVideoElement>}
+     * @memberof MediaLoader
+     */
+    static loadVideos(videoSorces, w, h) {
+        return new Promise((resolve, reject) => {
+            let video = document.createElement("video");
+            video.width = w | 640;
+            video.height = h | 360;
+            video.autoplay = true;
+            video.loop = true;
+            video.oncanplay = () => {
+                resolve(video);
+            };
+            video.onerror = (err) => {
+                reject(err);
+            };
+            video.src = videoSorces;
+        });
+    }
 }
 exports.MediaLoader = MediaLoader;

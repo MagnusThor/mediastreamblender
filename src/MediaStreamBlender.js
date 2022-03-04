@@ -263,7 +263,19 @@ class MediaStreamBlender {
      */
     addOnScreenLayers(layers) {
         layers.forEach(layer => this.tinyRender.addLayer(layer));
-        ;
+    }
+    /**
+     * Set the visibillity of the layer
+     *
+     * @param {string} layerId
+     * @param {boolean} visible
+     * @return {*}  {ILayer}
+     * @memberof MediaStreamBlender
+     */
+    setLayerVisibility(layerId, visible) {
+        const layer = this.tinyRender.layers.get(layerId);
+        layer.visible = visible;
+        return layer;
     }
 }
 exports.MediaStreamBlender = MediaStreamBlender;

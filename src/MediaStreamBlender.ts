@@ -1,7 +1,7 @@
 
-import { ILayer } from './ILayer';
+import { ILayer } from './interfaces/ILayer';
 import { MediaStreamRecorder } from './MediaStreamRecorder';
-import { IStreamSource } from './IStreamSource';
+import { IStreamSource } from './interfaces/IStreamSource';
 import { Tiny2DRenderer } from './TinyRenderer';
 
 
@@ -290,7 +290,6 @@ export class MediaStreamBlender {
         }
         this.isRendering = !this.isRendering;
     }
-
     /**
      * Add an on screen display later to surface
      *
@@ -308,7 +307,20 @@ export class MediaStreamBlender {
      */
     addOnScreenLayers(layers: ILayer[]):void {
         layers.forEach ( layer => this.tinyRender.addLayer(layer));
-    ;
+    }
+   
+    /**
+     * Set the visibillity of the layer
+     *
+     * @param {string} layerId
+     * @param {boolean} visible
+     * @return {*}  {ILayer}
+     * @memberof MediaStreamBlender
+     */
+    setLayerVisibility(layerId:string,visible:boolean):ILayer{
+        const layer = this.tinyRender.layers.get(layerId);
+        layer.visible = visible;
+        return layer;
     }
 
 }
