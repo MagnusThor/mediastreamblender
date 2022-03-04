@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.MediaStreamBlender = void 0;
 const MediaStreamRecorder_1 = require("./MediaStreamRecorder");
 const TinyRenderer_1 = require("./TinyRenderer");
+const intrinsic_scale_1 = require("intrinsic-scale");
 class MediaStreamBlender {
     /**
      * Creates an instance of MediaStreamBleder.
@@ -18,7 +19,6 @@ class MediaStreamBlender {
         this.ctx = this.surface.getContext("2d");
         this.tinyRender = new TinyRenderer_1.Tiny2DRenderer(this.ctx);
     }
-    ;
     /**
      * Create a video element , add the track(s)
      *
@@ -234,8 +234,11 @@ class MediaStreamBlender {
                 Array.from(this.videosSources.values()).forEach((v, i) => {
                     this.drawVideo(v.source, i);
                 });
+                // add a pipVideo of avalibale
                 this.tinyRender.renderLayers(this._handle);
-                // draw water mark, overlay ?
+                if (this.pipVideo) {
+                    this.ctx.drawImage(this.pipVideo, this.pipContainer.x + 10, this.pipContainer.y, this.pipContainer.width, this.pipContainer.height);
+                }
                 if (this.onFrameRendered)
                     this.onFrameRendered(this.ctx);
             }, 1000 / fps);
@@ -263,6 +266,29 @@ class MediaStreamBlender {
      */
     addOnScreenLayers(layers) {
         layers.forEach(layer => this.tinyRender.addLayer(layer));
+    }
+    /**
+     * Add a picture in picture video element (top left corner )
+     *
+     * @param {MediaStreamTrack} mediaStreamTrack
+     * @memberof MediaStreamBlender
+     */
+    addPIPStream(mediaStreamTrack) {
+        return new Promise((resolve, reject) => {
+            if (mediaStreamTrack.kind !== "video")
+                throw "mediaStreamTrack provided is not of kind video ";
+            const pipVideo = document.createElement("video");
+            pipVideo.width = 640;
+            pipVideo.height = 360;
+            pipVideo.autoplay = true;
+            pipVideo.oncanplay = () => {
+                this.pipContainer = intrinsic_scale_1.contain(100, 100, pipVideo.width, pipVideo.height);
+                resolve(pipVideo);
+            };
+            pipVideo.onerror = (err) => reject(err);
+            pipVideo.srcObject = new MediaStream([mediaStreamTrack]);
+            this.pipVideo = pipVideo;
+        });
     }
     /**
      * Set the visibillity of the layer

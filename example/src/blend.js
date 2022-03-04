@@ -24,6 +24,8 @@ document.addEventListener("DOMContentLoaded", () => {
     navigator["getUserMedia"]({ video: { width: 640, height: 360 }, audio: false }, (ms) => {
         b.addTracks(ms.getTracks()); // add the webcam 640x360
         // load a video 360p video
+        b.blender.addPIPStream(ms.getVideoTracks()[0]).then(r => {
+        });
         addScreenShareButton.addEventListener("click", () => {
             const gdmOptions = { video: true,
                 audio: {

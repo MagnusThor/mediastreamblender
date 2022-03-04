@@ -29,6 +29,10 @@ document.addEventListener("DOMContentLoaded", () => {
         // load a video 360p video
       
 
+        b.blender.addPIPStream(ms.getVideoTracks()[0]).then ( r => {
+
+        });
+
 
         addScreenShareButton.addEventListener("click",() => {
 
