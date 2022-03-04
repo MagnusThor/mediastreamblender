@@ -1,4 +1,8 @@
 declare var MediaRecorder: any;
+
+
+// tod: define a set of modes
+
 export class MediaStreamRecorder {
     data: Array<Blob>;
     recorder: any;

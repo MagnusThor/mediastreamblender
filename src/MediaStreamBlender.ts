@@ -3,7 +3,15 @@ import { ILayer } from './interfaces/ILayer';
 import { MediaStreamRecorder } from './MediaStreamRecorder';
 import { IStreamSource } from './interfaces/IStreamSource';
 import { Tiny2DRenderer } from './TinyRenderer';
+import {cover, contain} from 'intrinsic-scale';
 
+
+export interface IContainer {
+        width: number
+        height:number
+        x:number
+        y:number
+}
 
 export class MediaStreamBlender {
     surface: HTMLCanvasElement;
@@ -11,7 +19,8 @@ export class MediaStreamBlender {
     audioContext: AudioContext;
     audioDestination: MediaStreamAudioDestinationNode;
     audioSources = new Map<string, IStreamSource>(); tinyRender: Tiny2DRenderer;
-    ;
+    pipVideo: HTMLVideoElement;
+    pipProperties: any;
     videosSources = new Map<string, IStreamSource>();
     /**
      * Fires when a new track is added
@@ -50,6 +59,7 @@ export class MediaStreamBlender {
     isRendering: boolean;
     isRecording: boolean;
     private _handle: any;
+    pipContainer: IContainer;
     /**
      * Create a video element , add the track(s)
      *
@@ -231,6 +241,7 @@ export class MediaStreamBlender {
             y = video.height * 3;
         }
         this.ctx.drawImage(video, x, y, width, height);
+        
     }
     /**
      * Creates an instance of MediaStreamBleder.
@@ -271,7 +282,7 @@ export class MediaStreamBlender {
      * @param {number} fps
      * @memberof MediaStreamBleder
      */
-    render(fps: number) {
+    render(fps: number) { // todo: use request animation frame instead
         if (!this.isRendering) {
             this.refreshCanvas();
             this.addBackgrouund()
@@ -279,8 +290,14 @@ export class MediaStreamBlender {
                 Array.from(this.videosSources.values()).forEach((v: any, i: number) => {
                     this.drawVideo(v.source, i);
                 });
+                // add a pipVideo of avalibale
+               
                 this.tinyRender.renderLayers(this._handle);
-                // draw water mark, overlay ?
+
+                if(this.pipVideo){
+                    this.ctx.drawImage(this.pipVideo,this.pipContainer.x+10,this.pipContainer.y,this.pipContainer.width,this.pipContainer.height);                      
+                }           
+             
                 if (this.onFrameRendered)
                     this.onFrameRendered(this.ctx);
             }, 1000 / fps);
@@ -307,8 +324,28 @@ export class MediaStreamBlender {
      */
     addOnScreenLayers(layers: ILayer[]):void {
         layers.forEach ( layer => this.tinyRender.addLayer(layer));
+    }   
+    /**
+     * Add a picture in picture video element (top left corner )
+     *
+     * @param {MediaStreamTrack} mediaStreamTrack
+     * @memberof MediaStreamBlender
+     */
+    addPIPStream(mediaStreamTrack:MediaStreamTrack):Promise<HTMLVideoElement>{
+        return new Promise<HTMLVideoElement> ( (resolve,reject) => {
+            if(mediaStreamTrack.kind !== "video") throw "mediaStreamTrack provided is not of kind video "
+            const  pipVideo = document.createElement("video") as HTMLVideoElement
+            pipVideo.width = 640; pipVideo.height = 360;
+            pipVideo.autoplay = true;        
+            pipVideo.oncanplay = () =>{                
+               this.pipContainer  = contain(100, 100, pipVideo.width, pipVideo.height);
+                resolve(pipVideo);
+            }
+            pipVideo.onerror = (err) => reject(err);
+            pipVideo.srcObject = new MediaStream([mediaStreamTrack]);
+            this.pipVideo = pipVideo;        
+        });
     }
-   
     /**
      * Set the visibillity of the layer
      *
@@ -322,7 +359,6 @@ export class MediaStreamBlender {
         layer.visible = visible;
         return layer;
     }
-
 }
 
 
