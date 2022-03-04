@@ -23,7 +23,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const b = new BlendExample();
     navigator["getUserMedia"]({ video: { width: 640, height: 360 }, audio: false }, (ms) => {
         b.addTracks(ms.getTracks()); // add the webcam 640x360
-        // load a video 360p video
         b.blender.addPIPStream(ms.getVideoTracks()[0]).then(r => {
         });
         addScreenShareButton.addEventListener("click", () => {
@@ -70,8 +69,7 @@ document.addEventListener("DOMContentLoaded", () => {
             },
             visible: true
         };
-        b.blender.addOnScreenLayer(layerA);
-        b.blender.addOnScreenLayer(layerB);
+        b.blender.addOnScreenLayers([layerA, layerB]);
         b.setMediaStream(document.querySelector("video"));
         b.blender.render(25);
     }, err => console.error(err));

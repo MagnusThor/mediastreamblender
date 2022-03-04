@@ -1,6 +1,5 @@
 import { MediaStreamBlender, IStreamSource, MediaLoader } from "../..";
 import { ILayer } from "../..";
-
 export class BlendExample { // no need to be frank, but i did start this way :-)
     blender: MediaStreamBlender
     constructor() {
@@ -18,48 +17,31 @@ export class BlendExample { // no need to be frank, but i did start this way :-)
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-
-
     const addScreenShareButton = document.querySelector("#add-screen-share");
-
     const b = new BlendExample();
-
     navigator["getUserMedia"]({ video: { width: 640, height: 360 }, audio: false }, (ms) => {
-        b.addTracks(ms.getTracks()) // add the webcam 640x360
-        // load a video 360p video
-      
-
+        b.addTracks(ms.getTracks()) // add the webcam 640x360           
         b.blender.addPIPStream(ms.getVideoTracks()[0]).then ( r => {
-
         });
-
-
         addScreenShareButton.addEventListener("click",() => {
-
             const gdmOptions = {video: true,
               audio: {
                 echoCancellation: true,
                 noiseSuppression: true,
                 sampleRate: 44100
               } };
-
             navigator.mediaDevices.getDisplayMedia(gdmOptions).then( (ms:MediaStream) => {
                     b.addTracks(ms.getVideoTracks())
             });
-
         });
-
-
         MediaLoader.loadVideos("assets/video1.webm").then ( v => {
             b.blender.addVideoSource("video1", v);
             b.blender.refreshCanvas();
         });
-
         MediaLoader.loadVideos("assets/video2.mp4").then ( v => {
             b.blender.addVideoSource("video2", v);
             b.blender.refreshCanvas();
         });
-
         const layerA: ILayer = {
             id: "Hello Box",
             fn: (time: number, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) => {
@@ -74,7 +56,6 @@ document.addEventListener("DOMContentLoaded", () => {
             },
             visible:true 
         }
-
         const layerB: ILayer = {
             id: "bottom ribbon with text",
             fn: (time: number, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) => {            
@@ -86,16 +67,8 @@ document.addEventListener("DOMContentLoaded", () => {
             },
             visible:true 
         }        
-
-        b.blender.addOnScreenLayer(layerA);
-        b.blender.addOnScreenLayer(layerB);
-
+        b.blender.addOnScreenLayers([layerA,layerB]);
         b.setMediaStream(document.querySelector("video") as HTMLVideoElement)
-
         b.blender.render(25);
-
-
     }, err => console.error(err))
-
-
 })

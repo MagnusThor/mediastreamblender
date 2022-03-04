@@ -4,14 +4,8 @@ import { MediaStreamRecorder } from './MediaStreamRecorder';
 import { IStreamSource } from './interfaces/IStreamSource';
 import { Tiny2DRenderer } from './TinyRenderer';
 import {cover, contain} from 'intrinsic-scale';
+import { IContainer } from './interfaces/IContainer';
 
-
-export interface IContainer {
-        width: number
-        height:number
-        x:number
-        y:number
-}
 
 export class MediaStreamBlender {
     surface: HTMLCanvasElement;
@@ -20,7 +14,7 @@ export class MediaStreamBlender {
     audioDestination: MediaStreamAudioDestinationNode;
     audioSources = new Map<string, IStreamSource>(); tinyRender: Tiny2DRenderer;
     pipVideo: HTMLVideoElement;
-    pipProperties: any;
+    pipProperties: IContainer;
     videosSources = new Map<string, IStreamSource>();
     /**
      * Fires when a new track is added
@@ -52,8 +46,6 @@ export class MediaStreamBlender {
      * @memberof MediaStreamBlender
      */
     onFrameRendered: (ctx: RenderingContext) => void
-
-
     recorder: MediaStreamRecorder;
     onRecorderData: (data: any) => void;
     isRendering: boolean;
